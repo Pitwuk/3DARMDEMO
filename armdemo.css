@@ -1,0 +1,67 @@
+
+.button {
+    -fx-background-color: rgba(64,0,128, 0.75);
+    -fx-background-insets: 0;
+    -fx-background-radius: 2;
+    -fx-text-fill: white;
+    -fx-font-size: 30px;
+    -fx-effect: dropshadow(gaussian, black, 10, 0, 3, 3);
+}
+
+.button:armed {
+    -custom-solid-button-color: derive(lightgreen, -10%);
+    -fx-effect: dropshadow(gaussian, white, 10, 0, 3, 3);
+    -fx-background-insets: 2 2 0 0;
+}
+
+.sub-header {
+	-fx-text-fill: white; 
+	-fx-font-size: 40px;
+	-fx-effect: dropshadow(gaussian, black, 10, 0, 3, 3);
+}
+
+.header {
+	-fx-text-fill: white; 
+	-fx-font-size: 60px;
+	-fx-effect: dropshadow(gaussian, black, 10, 0, 3, 3);
+}
+
+.text-field {
+	-fx-font-size: 40px;
+	-fx-effect: dropshadow(gaussian, black, 10, 0, 3, 3);
+}
+
+.chart {
+    -fx-background-color: rgba(64,0,128, 0.75);
+    -fx-background-insets: -10;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, black, 10, 0, 3, 3);
+}
+
+/*
+.chart-plot-background {
+    -fx-background-color: #524F4C;
+}
+*/
+
+.axis {
+  -fx-tick-label-fill: white;
+}
+
+.axis-label {
+  -fx-text-fill: white;
+    -fx-font-size: 18px;
+}
+
+.chart-series-line {    
+    -fx-stroke-width: 4px;
+    -fx-effect: null;
+}
+
+.default-color0.chart-series-line { 
+	-fx-stroke: #00AACC; 
+}
+
+.default-color0.chart-line-symbol { 
+	-fx-background-color: #00AACC, white; 
+}
