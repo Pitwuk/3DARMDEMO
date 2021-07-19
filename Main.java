@@ -48,14 +48,14 @@ public class Main extends Application {
     private static final byte CMD_GAIN_4 = 0x02; // PGA Gain = 4V/V
     private static final byte CMD_GAIN_8 = 0x03; // PGA Gain = 8V/V
     private static final byte CMD_READ_CNVRSN = 0x00; // Read Conversion Result Data
-    private static final byte address = 0x68;
-    private static final byte CH1_CONFIG_CMD = (CMD_CH_1 | CMD_NEW_CNVRSN | CMD_MODE_ONESHOT | CMD_SPS_15 | CMD_GAIN_1);
-    private static final byte CH2_CONFIG_CMD = (CMD_CH_2 | CMD_NEW_CNVRSN | CMD_MODE_ONESHOT | CMD_SPS_15 | CMD_GAIN_1);
-    private static final byte CH3_CONFIG_CMD = (CMD_CH_3 | CMD_NEW_CNVRSN | CMD_MODE_ONESHOT | CMD_SPS_15 | CMD_GAIN_1);
+    private static final byte address_1 = 0x68;
+    private static final byte address_2 = 0x6A;
+    private static final byte address_3 = 0x6C;
+    private static final byte CH1_CONFIG_CMD = (CMD_CH_1 | CMD_MODE_CONT | CMD_SPS_15 | CMD_GAIN_1);
     I2CBus i2c;
-    I2CDevice adc;
-    private int adc_channel = 1;
-        
+    I2CDevice adc_1;
+    I2CDevice adc_2;
+    I2CDevice adc_3;
  
     
     private Timeline timeline;//timeline object
@@ -160,12 +160,10 @@ public class Main extends Application {
             int err = 0;
 
             try{
-              if(time%200==0){
-            if(adc_channel==1){
-              
-            adc.write(CH1_CONFIG_CMD);
+            //read adc 1
+            adc_1.write(CH1_CONFIG_CMD);
             while(err<=0)
-              err=adc.read(data, 0, 2);
+              err=adc_1.read(data, 0, 2);
             err=0;
             result_arr[1] = data[0];
             result_arr[0] = data[1];
@@ -174,12 +172,11 @@ public class Main extends Application {
               raw_adc = -1*(raw_adc-32767);
             voltage_x = (float)(((float)raw_adc/32767)*2.048);
             volt_x_label.setText(String.format("%1.4fV ", voltage_x-offset_x));
-            adc_channel=2;
-            adc.write(CH2_CONFIG_CMD);
-          } else if(adc_channel==2){
-            adc.write(CH2_CONFIG_CMD);
+
+            //read adc 2
+            adc_2.write(CH1_CONFIG_CMD);
             while(err<=0)
-              err=adc.read(data, 0, 2);
+              err=adc_2.read(data, 0, 2);
             err=0;
             result_arr[1] = data[0];
             result_arr[0] = data[1];
@@ -188,12 +185,11 @@ public class Main extends Application {
               raw_adc = -1*(raw_adc-32767);
             voltage_y = (float)(((float)raw_adc/32767)*2.048);
             volt_y_label.setText(String.format("%1.4fV ", voltage_y-offset_y));
-            adc_channel=3;
-            adc.write(CH3_CONFIG_CMD);
-          } else if (adc_channel==3) {
-            adc.write(CH3_CONFIG_CMD);
+
+            //read adc 3
+            adc_3.write(CH1_CONFIG_CMD);
             while(err<=0)
-              err=adc.read(data, 0, 2);
+              err=adc_3.read(data, 0, 2);
             err=0;
             result_arr[1] = data[0];
             result_arr[0] = data[1];
@@ -202,9 +198,7 @@ public class Main extends Application {
               raw_adc = -1*(raw_adc-32767);
             voltage_z = (float)(((float)raw_adc/32767)*2.048);
             volt_z_label.setText(String.format("%1.4fV ", voltage_z-offset_z));
-            adc_channel=1;
-            adc.write(CH1_CONFIG_CMD);
-          }}
+
           } catch(Exception e){
             System.out.println(e);
           }
@@ -542,9 +536,11 @@ public class Main extends Application {
     
     @Override
     public void start(Stage stage) throws FileNotFoundException, IOException, UnsupportedBusNumberException{
-      //initialize ADC
+      //initialize ADCs
       i2c = I2CFactory.getInstance(I2CBus.BUS_1);
-      adc = i2c.getDevice(address);
+      adc_1 = i2c.getDevice(address_1);
+      adc_2 = i2c.getDevice(address_2);
+      adc_3 = i2c.getDevice(address_3);
         
         stage.initStyle(StageStyle.UNDECORATED);
         this.stage = stage;
@@ -619,10 +615,10 @@ public class Main extends Application {
 
         // The top level JavaFX container
         stage.setTitle("3D Arm Demo");
-        main_scene.setCursor(Cursor.NONE); //hide cursor 
-        shunt_scene.setCursor(Cursor.NONE); //hide cursor 
+        //main_scene.setCursor(Cursor.NONE); //hide cursor 
+        //.setCursor(Cursor.NONE); //hide cursor 
         stage.setScene(main_scene);
-        stage.setMaximized(true);
+        //stage.setMaximized(true);
         stage.show();
     }
 
