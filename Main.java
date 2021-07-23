@@ -77,7 +77,7 @@ public class Main extends Application {
     private float lb_y = 0; //pound force for y
     private float lb_z = 0; //pound force for z
     private float lb_combined = 0; //total pound force
-    private float high_score = 0; //high score in lbs
+    private float high_score = 50; //high score in lbs
     
     //conversion factor (lb/V)
     private float sensitivity_x = 1400; //sensitivity for x
@@ -122,6 +122,10 @@ public class Main extends Application {
     private NumberAxis xAxis; //x axis
     private NumberAxis yAxis; //y axis
     
+    //led strip
+    private DotStar led_strip;
+    private final int NUM_LEDS = 30;
+    
     
     //sets the offsets in all axes
     public void setOffsets(){
@@ -152,7 +156,7 @@ public class Main extends Application {
     }   
     
     //updates the voltages lbs and labels
-    public void updateValues(){
+    public void updateValues() throws IOException, InterruptedException{
             //adc data 
             byte data[] = {0,0};
             byte result_arr[] = {0,0,0,0};
@@ -200,7 +204,7 @@ public class Main extends Application {
             volt_z_label.setText(String.format("%1.4fV ", voltage_z-offset_z));
 
           } catch(Exception e){
-            System.out.println(e);
+            System.out.println("ADCs Not Responding");
           }
             
             //update lbs
@@ -212,8 +216,22 @@ public class Main extends Application {
             lbs_z_label.setText(String.format("%1.2flbf ", lb_z));
             lb_combined = lb_x+lb_y+lb_z;
             lbs_combined_label.setText(String.format("%1.2flbf ", lb_combined));
-            high_score=lb_combined>high_score?lb_combined:high_score;
-            high_score_label.setText(String.format("%1.2flbf ", high_score));
+            
+            //update LED strip
+            float scalar = lb_combined/high_score;
+            if(scalar>1){
+              //new high score
+              high_score=lb_combined>high_score?lb_combined:high_score;
+              high_score_label.setText(String.format("%1.2flbf ", high_score));
+              //TODO start bell
+              //led flash
+              ledRainbow();
+              //TODO stop bell
+            } else {
+              //display leds 
+              ledScale(scalar);
+            }
+            
             
             time+=100;
             time_sec=(float)time/1000;
@@ -229,6 +247,24 @@ public class Main extends Application {
 			yAxis.setUpperBound(Collections.max(q)+1);
         
 }
+    //displays a rainbow on the led strip
+    public void ledRainbow() throws IOException, InterruptedException{
+      for(int j=0; j<300; j++) {
+        for(int i=0; i<NUM_LEDS; i++) 
+          led_strip.setPixelColor(i, (int)(Math.random()*255), (int)(Math.random()*255), (int)(Math.random()*255));
+        led_strip.show();
+        Thread.sleep(50);
+      }
+      led_strip.clear();
+      led_strip.show();
+    }
+    
+    public void ledScale(float scalar) throws IOException, InterruptedException{
+      led_strip.clear();
+        for(int i=0; i<Math.round(NUM_LEDS*scalar); i++) 
+          led_strip.setPixelColor(i, 0, 255, 0);
+      led_strip.show();
+    }
     
     //returns an HBox of the combined force labels
     public HBox getForceCombinedLabels() {
@@ -263,7 +299,7 @@ public class Main extends Application {
         box.getChildren().add(high_score_title_label);
         
         // Text label for displaying the total pound force
-        high_score_label = new Label("0.00lbf");
+        high_score_label = new Label(String.format("%1.2flbf ", high_score));
         high_score_label.getStyleClass().add("sub-header");
         box.getChildren().add(high_score_label);
 
@@ -535,12 +571,15 @@ public class Main extends Application {
     }
     
     @Override
-    public void start(Stage stage) throws FileNotFoundException, IOException, UnsupportedBusNumberException{
+    public void start(Stage stage) throws FileNotFoundException, IOException, UnsupportedBusNumberException, InterruptedException{
       //initialize ADCs
       i2c = I2CFactory.getInstance(I2CBus.BUS_1);
       adc_1 = i2c.getDevice(address_1);
       adc_2 = i2c.getDevice(address_2);
       adc_3 = i2c.getDevice(address_3);
+      //initialize LED strip
+      led_strip=new DotStar(NUM_LEDS);
+      
         
         stage.initStyle(StageStyle.UNDECORATED);
         this.stage = stage;
@@ -581,7 +620,10 @@ public class Main extends Application {
           Duration.ZERO,
           new EventHandler<ActionEvent>() {
             @Override public void handle(ActionEvent actionEvent) {
-              updateValues();
+              try{
+                updateValues();
+              } catch(Exception e) {
+              }
             }
           }
         ),
