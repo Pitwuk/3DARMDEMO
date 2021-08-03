@@ -123,9 +123,12 @@ public class Main extends Application {
     private NumberAxis xAxis; //x axis
     private NumberAxis yAxis; //y axis
     
-    //led strip
+    //led strip variables
     private DotStar led_strip;
-    private final int NUM_LEDS = 30;
+    private final int NUM_LEDS = 60;
+    private float perc = 0;
+    private int green = 255;
+    private int red = 0;
     
     //bools for triggering high score 
     private boolean zeroed = false;
@@ -238,6 +241,8 @@ public class Main extends Application {
               //stop bell
               bell_pin.low();
             } else {
+              if(scalar>1)
+                scalar=1;
               //display leds 
               ledScale(scalar);
             }
@@ -271,8 +276,15 @@ public class Main extends Application {
     
     public void ledScale(float scalar) throws IOException, InterruptedException{
       led_strip.clear();
-        for(int i=0; i<Math.round(NUM_LEDS*scalar); i++) 
-          led_strip.setPixelColor(i, 0, 255, 0);
+        green=120;
+        for(int i=0; i<Math.round(NUM_LEDS*scalar); i++) {
+          perc=(float)i/NUM_LEDS;
+          if(perc<=0.5)
+            red = (int)Math.round(2*perc*255);
+          else
+            green = (int)Math.round((1-(2*(perc-0.5)))*120);
+          led_strip.setPixelColor(i, red, green, 0);
+        }
       led_strip.show();
     }
     
