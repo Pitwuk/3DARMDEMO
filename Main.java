@@ -30,7 +30,8 @@ public class Main extends Application {
     // get a handle to the GPIO controller
     private final GpioController gpio = GpioFactory.getInstance();
     // creating the pin object
-    private final GpioPinDigitalOutput pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25);
+    private final GpioPinDigitalOutput bell_pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_06, "Bell", PinState.LOW);
+    
     //ADC Commands
     private static final byte CMD_NEW_CNVRSN = (byte) 0x80; // Initiate a new conversion(One-Shot Conversion mode only)
     private static final byte CMD_MODE_CONT = 0x10; // Continuous Conversion Mode
@@ -48,9 +49,9 @@ public class Main extends Application {
     private static final byte CMD_GAIN_4 = 0x02; // PGA Gain = 4V/V
     private static final byte CMD_GAIN_8 = 0x03; // PGA Gain = 8V/V
     private static final byte CMD_READ_CNVRSN = 0x00; // Read Conversion Result Data
-    private static final byte address_1 = 0x68;
-    private static final byte address_2 = 0x6A;
-    private static final byte address_3 = 0x6C;
+    private static final byte address_1 = 0x6C; // X address
+    private static final byte address_2 = 0x68; // Y address
+    private static final byte address_3 = 0x6A; // Z address
     private static final byte CH1_CONFIG_CMD = (CMD_CH_1 | CMD_MODE_CONT | CMD_SPS_15 | CMD_GAIN_1);
     I2CBus i2c;
     I2CDevice adc_1;
@@ -126,33 +127,40 @@ public class Main extends Application {
     private DotStar led_strip;
     private final int NUM_LEDS = 30;
     
+    //bools for triggering high score 
+    private boolean zeroed = false;
+    private boolean calibrated = false;
+    
     
     //sets the offsets in all axes
     public void setOffsets(){
         offset_x = voltage_x;
         offset_y = voltage_y;
         offset_z = voltage_z;
-        high_score=0;
+        high_score=50;
         high_score_label.setText(String.format("%1.2flbf ", high_score));
-        pin.high();
+        bell_pin.low();
+        zeroed=true;
     }   
     
     //resets the offsets to 0 in all axes
     public void resetOffsets(){
+        zeroed=false;
         offset_x = 0;
         offset_y = 0;
         offset_z = 0;
-        pin.low();
+        bell_pin.low();
     }    
     
     //sets the sensitivity in all axes
     public void calibrateAll(){
-        sensitivity_x = shunt_eq_x/voltage_x;
-        sensitivity_y = shunt_eq_y/voltage_y;
-        sensitivity_z = shunt_eq_z/voltage_z;
+        sensitivity_x = voltage_x!=0?shunt_eq_x/voltage_x:0;
+        sensitivity_y = voltage_y!=0?shunt_eq_y/voltage_y:0;
+        sensitivity_z = voltage_z!=0?shunt_eq_z/voltage_z:0;
         sensitivity_x_label.setText(String.format("%1.2flb/V",sensitivity_x));
         sensitivity_y_label.setText(String.format("%1.2flb/V",sensitivity_y));
         sensitivity_z_label.setText(String.format("%1.2flb/V",sensitivity_z));
+        calibrated = true;
     }   
     
     //updates the voltages lbs and labels
@@ -219,14 +227,16 @@ public class Main extends Application {
             
             //update LED strip
             float scalar = lb_combined/high_score;
-            if(scalar>1){
+            if(scalar>1&&zeroed&&calibrated){
               //new high score
               high_score=lb_combined>high_score?lb_combined:high_score;
               high_score_label.setText(String.format("%1.2flbf ", high_score));
-              //TODO start bell
+              //start bell
+              bell_pin.high();
               //led flash
               ledRainbow();
-              //TODO stop bell
+              //stop bell
+              bell_pin.low();
             } else {
               //display leds 
               ledScale(scalar);
@@ -253,7 +263,7 @@ public class Main extends Application {
         for(int i=0; i<NUM_LEDS; i++) 
           led_strip.setPixelColor(i, (int)(Math.random()*255), (int)(Math.random()*255), (int)(Math.random()*255));
         led_strip.show();
-        Thread.sleep(50);
+        //Thread.sleep(5);
       }
       led_strip.clear();
       led_strip.show();
@@ -385,7 +395,9 @@ public class Main extends Application {
     //returns a VBox of the force labels
     public VBox getForceLabels() {
         // Holder to align the items vertically
-        VBox box = new VBox(getForceCombinedLabels(),getHighScoreLabels(),getForceXLabels(),getForceYLabels(),getForceZLabels());
+        VBox box = new VBox(getForceCombinedLabels(),getHighScoreLabels(),getForceXLabels(),getForceYLabels());getForceZLabels();
+        // Use this line to display z force
+        //VBox box = new VBox(getForceCombinedLabels(),getHighScoreLabels(),getForceXLabels(),getForceYLabels(),getForceZLabels());
         box.setSpacing(20);
         box.setPadding(new Insets(0, 20, 10, 20));
         box.setPrefWidth(800.0);
