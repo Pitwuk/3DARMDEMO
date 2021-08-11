@@ -38,12 +38,6 @@
     -fx-effect: dropshadow(gaussian, black, 10, 0, 3, 3);
 }
 
-/*
-.chart-plot-background {
-    -fx-background-color: #524F4C;
-}
-*/
-
 .axis {
   -fx-tick-label-fill: white;
 }
