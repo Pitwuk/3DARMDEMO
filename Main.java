@@ -125,7 +125,7 @@ public class Main extends Application {
     
     //led strip variables
     private DotStar led_strip;
-    private final int NUM_LEDS = 60;
+    private final int NUM_LEDS = 68;
     private float perc = 0;
     private int green = 255;
     private int red = 0;
