@@ -23,6 +23,12 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
+/**
+ * This is a JavaFx GUI for controlling the TR3D Arm Wresting Demo for Michigan Scientific Corporation.
+ * 
+ * @version 1.1, 13 August 2021
+ * @author Patrick Ogden
+ */
 public class Main extends Application {
 
   // get a handle to the GPIO controller
@@ -55,11 +61,11 @@ public class Main extends Application {
   private static final byte address_2 = 0x68; // Y address
   private static final byte address_3 = 0x6A; // Z address
   private static final byte CH1_CONFIG_CMD =
-    (CMD_CH_1 | CMD_MODE_CONT | CMD_SPS_15 | CMD_GAIN_1);
-  I2CBus i2c;
-  I2CDevice adc_1;
-  I2CDevice adc_2;
-  I2CDevice adc_3;
+    (CMD_CH_1 | CMD_MODE_CONT | CMD_SPS_15 | CMD_GAIN_1); // ADC Configuration command for all ADCs
+  I2CBus i2c; // i2c bus 1
+  I2CDevice adc_1; // X axis ADC
+  I2CDevice adc_2; // Y axis ADC
+  I2CDevice adc_3; // Z axis ADC
 
   private Timeline timeline; //timeline object
   private static final Duration UPDATE_FREQUENCY = Duration.millis(100); // sample rate
@@ -126,17 +132,20 @@ public class Main extends Application {
   private NumberAxis yAxis; //y axis
 
   //led strip variables
-  private DotStar led_strip;
-  private final int NUM_LEDS = 68;
-  private float perc = 0;
-  private int green = 255;
-  private int red = 0;
+  private DotStar led_strip; // Dotstar LED strip
+  private final int NUM_LEDS = 68; // number of LEDs
+  private float perc = 0; // percentage of bar filled
+  private int green = 120; // green of first pixel 
+  private int red = 0; // red of first pixel
 
   //bools for triggering high score
-  private boolean zeroed = false;
-  private boolean calibrated = false;
+  private boolean zeroed = false; // are the forces zeroed
+  private boolean calibrated = false; // are the shunts calibrated
 
-  //sets the offsets in all axes
+
+  /**
+   * sets the offsets in all axes
+   */
   public void setOffsets() {
     offset_x = voltage_x;
     offset_y = voltage_y;
@@ -147,7 +156,10 @@ public class Main extends Application {
     zeroed = true;
   }
 
-  //resets the offsets to 0 in all axes
+  /**
+   * Resets the offsets to 0 in all axes.
+   * It also disables the bell.
+   */
   public void resetOffsets() {
     zeroed = false;
     offset_x = 0;
@@ -156,7 +168,9 @@ public class Main extends Application {
     bell_pin.low();
   }
 
-  //sets the sensitivity in all axes
+  /**
+   * Sets the sensitivities in all axes and displays them.
+   */
   public void calibrateAll() {
     sensitivity_x = voltage_x != 0 ? shunt_eq_x / voltage_x : 0;
     sensitivity_y = voltage_y != 0 ? shunt_eq_y / voltage_y : 0;
@@ -167,7 +181,12 @@ public class Main extends Application {
     calibrated = true;
   }
 
-  //updates the voltages lbs and labels
+  /**
+   * Reads the ADCs and updates the voltages, lbs, labels, LED strip, and triggers the bell if a high score is broken.
+   * 
+   * @throws IOException if the led strip fails to write or the ADCs fail to read
+   * @throws InterruptedException if the current thread is interrupted
+   */
   public void updateValues() throws IOException, InterruptedException {
     //adc data
     byte data[] = { 0, 0 };
@@ -263,7 +282,12 @@ public class Main extends Application {
     yAxis.setUpperBound(Collections.max(q) + 1);
   }
 
-  //displays a rainbow on the led strip
+  /**
+   * Displays a rainbow on the led strip.
+   * 
+   * @throws IOException if the led strip fails to write
+   * @throws InterruptedException if the current thread is interrupted
+   */
   public void ledRainbow() throws IOException, InterruptedException {
     for (int j = 0; j < 300; j++) { // change the max value to adjust the number of color changes
       for (int i = 0; i < NUM_LEDS; i++) led_strip.setPixelColor(
@@ -280,7 +304,13 @@ public class Main extends Application {
   }
 
 
-  //displays the scale on the led strip with a green to red gradient
+  /**
+   * Displays the scale on the LED strip with a green to red gradient.
+   * 
+   * @param scalar number between 0 and 1 that represents the percentage of LEDs enabled
+   * @throws IOException if the led strip fails to write
+   * @throws InterruptedException if the current thread is interrupted
+   */
   public void ledScale(float scalar) throws IOException, InterruptedException {
     led_strip.clear();
     green = 120; //255 was too green so I went with 120
@@ -293,7 +323,11 @@ public class Main extends Application {
     led_strip.show();
   }
 
-  //returns an HBox of the combined force labels
+  /**
+   * Returns an HBox of the combined force labels.
+   * 
+   * @return an HBox of the combined force labels
+   */
   public HBox getForceCombinedLabels() {
     // Holder to align the items vertically
     HBox box = new HBox();
@@ -313,7 +347,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns an HBox of the high score force labels
+  /**
+   * Returns an HBox of the high score force labels.
+   * 
+   * @return an HBox of the high score force labels
+   */
   public HBox getHighScoreLabels() {
     // Holder to align the items vertically
     HBox box = new HBox();
@@ -333,7 +371,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns an HBox of the x axis labels
+  /**
+   * Returns an HBox of the x axis labels.
+   * 
+   * @return an HBox of the x axis labels
+   */
   public HBox getForceXLabels() {
     // Holder to align the items horizontally
     HBox box = new HBox();
@@ -358,7 +400,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns an HBox of the y axis labels
+  /**
+   * Returns an HBox of the y axis labels.
+   * 
+   * @return an HBox of the y axis labels
+   */
   public HBox getForceYLabels() {
     // Holder to align the items horizontally
     HBox box = new HBox();
@@ -383,7 +429,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns an HBox of the z axis labels
+  /**
+   * Returns an HBox of the z axis labels.
+   * 
+   * @return an HBox of the z axis labels
+   */
   public HBox getForceZLabels() {
     // Holder to align the items horizontally
     HBox box = new HBox();
@@ -408,7 +458,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns a VBox of the force labels
+  /**
+   * Returns a VBox of all the force labels.
+   * 
+   * @return a VBox of all the force labels
+   */
   public VBox getForceLabels() {
     // Holder to align the items vertically
     VBox box = new VBox(
@@ -426,7 +480,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns a HBox of the buttons
+  /**
+   * Returns an HBox of the main buttons.
+   * 
+   * @return an HBox of the main buttons
+   */
   public HBox getButtons() {
     // Holder to align the items vertically
     HBox box = new HBox();
@@ -476,7 +534,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns a HBox of the shunt buttons
+  /**
+   * Returns an HBox of the shunt buttons.
+   * 
+   * @return an HBox of the shunt buttons
+   */
   public HBox getShuntButtons() {
     // Holder to align the items vertically
     HBox box = new HBox();
@@ -497,7 +559,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns a VBox of the sensitivity labels
+  /**
+   * Returns a VBox of the sensitivity labels.
+   * 
+   * @return a VBox of the sensitivity labels
+   */
   public VBox getSensitivityLabels() {
     // Holder to align the items vertically
     VBox box = new VBox();
@@ -536,7 +602,11 @@ public class Main extends Application {
     return box;
   }
 
-  //returns a VBox of the shunt equivalent text boxes
+  /**
+   * Returns a VBox of the shunt equivalent text boxes.
+   * 
+   * @return a VBox of the shunt equivalent text boxes
+   */
   public VBox getShuntEqBox() {
     // Holder to align the items vertically
     VBox box = new VBox();
@@ -631,7 +701,11 @@ public class Main extends Application {
     return box;
   }
 
-  // line chart for displaying the force over time
+  /**
+   * Returns a line chart for displaying the force over time.
+   * 
+   * @return a line chart for displaying the force over time
+   */
   public LineChart<Number, Number> getScatterChart() {
     //Defining the x axis
     xAxis = new NumberAxis(0, 100, 100);
@@ -657,6 +731,15 @@ public class Main extends Application {
     return scatter_chart;
   }
 
+  /**
+   * Initializes the adcs, led strips, sets up the scences, and starts the application.
+   * 
+   * @param stage main stage for the GUI
+   * @throws FileNotFoundException if it can't find the fair.png
+   * @throws IOException if it can't communicate with the ADCs
+   * @throws UnsupportedBusNumberException if the I2c bus doesn't exist
+   * @throws InterruptedException if the thread gets interrupted
+   */
   @Override
   public void start(Stage stage)
     throws FileNotFoundException, IOException, UnsupportedBusNumberException, InterruptedException {
@@ -768,6 +851,11 @@ public class Main extends Application {
     stage.show();
   }
 
+  /**
+   * Launches the JavaFx application.
+   * 
+   * @param args command line arguments
+   */
   public static void main(String[] args) {
     launch();  // launches the application
   }
