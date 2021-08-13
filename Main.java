@@ -486,7 +486,7 @@ public class Main extends Application {
    * @return an HBox of the main buttons
    */
   public HBox getButtons() {
-    // Holder to align the items vertically
+    // Holder to align the items horizontally
     HBox box = new HBox();
     box.setSpacing(20);
     box.setPadding(new Insets(0, 20, 10, 20));
@@ -519,7 +519,6 @@ public class Main extends Application {
     // Button to switch to shunt screen
     Button shunt_button = new Button("Shunt");
     shunt_button.setOnAction(e -> stage.setScene(shunt_scene));
-    shunt_scene.setCursor(Cursor.NONE); //hide cursor
 
     // Button to exit the application
     Button exit_button = new Button("Exit");
@@ -540,17 +539,16 @@ public class Main extends Application {
    * @return an HBox of the shunt buttons
    */
   public HBox getShuntButtons() {
-    // Holder to align the items vertically
+    // Holder to align the items horizontally
     HBox box = new HBox();
     box.setSpacing(20);
     box.setPadding(new Insets(0, 20, 10, 20));
 
-    // Button to switch to shunt screen
+    // Button to switch back to main screen
     Button back_button = new Button("Back");
     back_button.setOnAction(e -> stage.setScene(main_scene));
-    main_scene.setCursor(Cursor.NONE); //hide cursor
-
-    // Button to zero voltages
+    
+    // Button to set sensitivities
     Button calibrate_button = new Button("Calibrate");
     calibrate_button.setOnAction(e -> calibrateAll());
 
@@ -844,8 +842,6 @@ public class Main extends Application {
 
     // The top level JavaFX container
     stage.setTitle("3D Arm Demo");
-    main_scene.setCursor(Cursor.NONE); // hide cursor
-    shunt_scene.setCursor(Cursor.NONE); // hide cursor
     stage.setScene(main_scene);
     stage.setMaximized(true);
     stage.show();
